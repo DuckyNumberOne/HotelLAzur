@@ -1,8 +1,9 @@
 'use client'
 
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { bookingSchema, type BookingFormInput, type BookingFormData } from '@/lib/schemas'
+import { AppDateTimePicker } from './AppDateTimePicker'
 
 interface BookingFormProps {
   onSubmit: (data: BookingFormData) => Promise<void>
@@ -52,6 +53,7 @@ export function BookingForm({ onSubmit, isSubmitting, onCancel, defaultValues, s
     register,
     handleSubmit,
     watch,
+    control,
     formState: { errors },
   } = useForm<BookingFormInput, unknown, BookingFormData>({
     resolver: zodResolver(bookingSchema),
@@ -107,11 +109,18 @@ export function BookingForm({ onSubmit, isSubmitting, onCancel, defaultValues, s
           </Field>
 
           <Field label="Ngày đặt" required error={errors.bookingDate?.message}>
-            <input
-              {...register('bookingDate')}
-              type="date"
-              min={today}
-              className={inputCls(!!errors.bookingDate)}
+            <Controller
+              name="bookingDate"
+              control={control}
+              render={({ field }) => (
+                <AppDateTimePicker
+                  value={field.value ?? ''}
+                  onChange={field.onChange}
+                  min={today}
+                  placeholder="Chọn ngày đặt"
+                  error={!!errors.bookingDate}
+                />
+              )}
             />
           </Field>
         </div>
@@ -126,20 +135,34 @@ export function BookingForm({ onSubmit, isSubmitting, onCancel, defaultValues, s
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <Field label="Ngày check-in" required error={errors.checkIn?.message}>
-            <input
-              {...register('checkIn')}
-              type="date"
-              min={today}
-              className={inputCls(!!errors.checkIn)}
+            <Controller
+              name="checkIn"
+              control={control}
+              render={({ field }) => (
+                <AppDateTimePicker
+                  value={field.value ?? ''}
+                  onChange={field.onChange}
+                  min={today}
+                  placeholder="Chọn ngày check-in"
+                  error={!!errors.checkIn}
+                />
+              )}
             />
           </Field>
 
           <Field label="Ngày check-out" required error={errors.checkOut?.message}>
-            <input
-              {...register('checkOut')}
-              type="date"
-              min={checkIn || today}
-              className={inputCls(!!errors.checkOut)}
+            <Controller
+              name="checkOut"
+              control={control}
+              render={({ field }) => (
+                <AppDateTimePicker
+                  value={field.value ?? ''}
+                  onChange={field.onChange}
+                  min={checkIn || today}
+                  placeholder="Chọn ngày check-out"
+                  error={!!errors.checkOut}
+                />
+              )}
             />
           </Field>
 

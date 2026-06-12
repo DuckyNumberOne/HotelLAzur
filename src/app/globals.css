@@ -29,7 +29,7 @@
 .hotel-calendar .react-calendar__tile {
   border-radius: 6px;
   padding: 4px 1px;
-  min-height: 52px;
+  min-height: 62px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -71,7 +71,16 @@
   color: white !important;
 }
 
-/* Guest name badge */
+/* Multi-status tile (paid + pending mixed on same day) */
+.hotel-calendar .tile-multi {
+  background: linear-gradient(135deg, #fef3c7 50%, #d1fae5 50%) !important;
+  color: #374151 !important;
+}
+.hotel-calendar .tile-multi:hover {
+  background: linear-gradient(135deg, #fde68a 50%, #a7f3d0 50%) !important;
+}
+
+/* Single guest badge */
 .guest-label {
   display: block;
   margin-top: 1px;
@@ -88,10 +97,51 @@
   line-height: 1.5;
 }
 
-.guest-extra {
-  margin-left: 1px;
+/* Multi-guest rows */
+.guest-rows {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 1px;
+  width: 96%;
+  margin-top: 1px;
+}
+
+.guest-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 7.5px;
+  font-weight: 700;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.82);
+  border-radius: 3px;
+  padding: 0 2px;
+}
+
+.row-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.guest-row.row-paid .row-dot   { background-color: #059669; }
+.guest-row.row-pending .row-dot { background-color: #d97706; }
+
+.guest-name-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #1f2937;
+}
+
+.guest-more {
   font-size: 7px;
   color: #6b7280;
+  font-weight: 600;
+  padding-left: 2px;
 }
 
 /* Weekday labels */
@@ -106,17 +156,31 @@
   text-decoration: none;
 }
 
+/* ─── Picker popover calendar — compact, no guest names ─ */
+.picker-calendar .react-calendar__tile {
+  min-height: 36px !important;
+  padding: 4px 2px !important;
+  font-size: 12px;
+}
+.picker-calendar .react-calendar__month-view__days__day--weekend {
+  color: #ef4444;
+}
+.picker-calendar .react-calendar__year-view__months__month {
+  padding: 12px 4px !important;
+  font-size: 13px;
+}
+
 /* ─── Mobile: tighter tiles ──────────────────────────── */
 @media (max-width: 400px) {
   .hotel-calendar .react-calendar__tile {
     padding: 3px 0;
-    min-height: 44px;
+    min-height: 54px;
     border-radius: 4px;
   }
   .hotel-calendar .react-calendar__tile abbr {
     font-size: 11px;
   }
-  .guest-label {
+  .guest-label, .guest-row {
     font-size: 7px;
   }
   .hotel-calendar .react-calendar__navigation button {

@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
+import { AppDateTimePicker } from './AppDateTimePicker'
 import NiceModal from '@ebay/nice-modal-react'
 import type { Booking } from '@/types/booking'
 import { STATUS_LABELS } from '@/types/booking'
@@ -71,14 +72,53 @@ function ConfirmDeleteDialog({
   )
 }
 
+type StatusFilter = 'all' | 'pending' | 'paid' | 'cancelled'
+
+const STATUS_TABS: { value: StatusFilter; label: string }[] = [
+  { value: 'all', label: 'Tất cả' },
+  { value: 'pending', label: 'Đang đặt' },
+  { value: 'paid', label: 'Đã thanh toán' },
+  { value: 'cancelled', label: 'Hủy' },
+]
+
 export function BookingList({ bookings, onRefresh }: BookingListProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [deletingBooking, setDeletingBooking] = useState<Booking | null>(null)
 
-  const sorted = [...bookings].sort(
-    (a, b) => new Date(a.checkIn).getTime() - new Date(b.checkIn).getTime()
-  )
+  const [searchName, setSearchName] = useState('')
+  const [filterStatus, setFilterStatus] = useState<StatusFilter>('all')
+  const [filterDateMode, setFilterDateMode] = useState<'date' | 'month'>('month')
+  const [filterDate, setFilterDate] = useState('')
+
+  const hasFilter = searchName !== '' || filterStatus !== 'all' || filterDate !== ''
+
+  const handleDateModeChange = (mode: 'date' | 'month') => {
+    setFilterDateMode(mode)
+    setFilterDate('')
+  }
+
+  const filtered = useMemo(() => {
+    const sorted = [...bookings].sort(
+      (a, b) => new Date(a.checkIn).getTime() - new Date(b.checkIn).getTime()
+    )
+    return sorted.filter((b) => {
+      if (searchName && !b.guestName.toLowerCase().includes(searchName.toLowerCase())) return false
+      if (filterStatus !== 'all' && b.status !== filterStatus) return false
+      if (filterDate) {
+        if (filterDateMode === 'month') {
+          const [year, month] = filterDate.split('-').map(Number)
+          const monthStart = `${filterDate}-01`
+          const monthEnd = new Date(year, month, 0).toISOString().split('T')[0]
+          if (b.checkIn > monthEnd || b.checkOut < monthStart) return false
+        } else {
+          // Ngày cụ thể: booking phải bao gồm ngày đó
+          if (filterDate < b.checkIn || filterDate > b.checkOut) return false
+        }
+      }
+      return true
+    })
+  }, [bookings, searchName, filterStatus, filterDate, filterDateMode])
 
   const handleEdit = (b: Booking) => {
     NiceModal.show(BookingModal, { booking: b, onSuccess: onRefresh })
@@ -96,6 +136,12 @@ export function BookingList({ bookings, onRefresh }: BookingListProps) {
     }
   }
 
+  const clearFilters = () => {
+    setSearchName('')
+    setFilterStatus('all')
+    setFilterDate('')
+  }
+
   return (
     <>
       {deletingBooking && (
@@ -107,17 +153,119 @@ export function BookingList({ bookings, onRefresh }: BookingListProps) {
       )}
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6">
+        {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="text-lg sm:text-xl font-bold text-gray-800">Danh Sách Đặt Phòng</h2>
-            <p className="text-xs text-gray-400 mt-0.5">Tất cả lịch đặt</p>
+            <p className="text-xs text-gray-400 mt-0.5">
+              {hasFilter
+                ? `${filtered.length} / ${bookings.length} kết quả`
+                : 'Tất cả lịch đặt'}
+            </p>
           </div>
           <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full">
-            {bookings.length}
+            {hasFilter ? `${filtered.length}/${bookings.length}` : bookings.length}
           </span>
         </div>
 
-        {sorted.length === 0 ? (
+        {/* Filters */}
+        <div className="space-y-2 mb-4">
+          {/* Search by name */}
+          <div className="relative">
+            <svg
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"
+              fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
+            </svg>
+            <input
+              type="text"
+              placeholder="Tìm theo tên khách..."
+              value={searchName}
+              onChange={(e) => setSearchName(e.target.value)}
+              className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors bg-gray-50 focus:bg-white"
+            />
+            {searchName && (
+              <button
+                onClick={() => setSearchName('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+          </div>
+
+          {/* Status + Month row */}
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Status pills */}
+            <div className="flex items-center gap-1 flex-wrap">
+              {STATUS_TABS.map((tab) => (
+                <button
+                  key={tab.value}
+                  onClick={() => setFilterStatus(tab.value)}
+                  className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors whitespace-nowrap ${
+                    filterStatus === tab.value
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Date/Month picker with toggle */}
+            <div className="ml-auto flex items-center gap-1.5">
+              <div className="flex rounded-lg border border-gray-200 overflow-hidden text-xs shrink-0">
+                <button
+                  type="button"
+                  onClick={() => handleDateModeChange('date')}
+                  className={`px-2.5 py-1.5 font-medium transition-colors ${
+                    filterDateMode === 'date'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-white text-gray-500 hover:bg-gray-50'
+                  }`}
+                >
+                  Ngày
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDateModeChange('month')}
+                  className={`px-2.5 py-1.5 font-medium transition-colors border-l border-gray-200 ${
+                    filterDateMode === 'month'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-white text-gray-500 hover:bg-gray-50'
+                  }`}
+                >
+                  Tháng
+                </button>
+              </div>
+              <div className="w-36">
+                <AppDateTimePicker
+                  mode={filterDateMode}
+                  value={filterDate}
+                  onChange={setFilterDate}
+                  placeholder={filterDateMode === 'month' ? 'Chọn tháng' : 'Chọn ngày'}
+                />
+              </div>
+            </div>
+
+            {/* Clear all */}
+            {hasFilter && (
+              <button
+                onClick={clearFilters}
+                className="text-xs text-red-500 hover:text-red-700 font-medium whitespace-nowrap"
+              >
+                Xóa bộ lọc
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* List */}
+        {bookings.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-14 text-gray-400">
             <svg className="w-12 h-12 mb-3 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
@@ -125,9 +273,19 @@ export function BookingList({ bookings, onRefresh }: BookingListProps) {
             <p className="font-medium text-sm">Chưa có đặt phòng nào</p>
             <p className="text-xs mt-1">Nhấn &ldquo;Đặt phòng&rdquo; để thêm mới</p>
           </div>
+        ) : filtered.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-14 text-gray-400">
+            <svg className="w-12 h-12 mb-3 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
+            </svg>
+            <p className="font-medium text-sm">Không tìm thấy kết quả</p>
+            <button onClick={clearFilters} className="text-xs text-blue-500 mt-1 hover:underline">
+              Xóa bộ lọc
+            </button>
+          </div>
         ) : (
           <div className="space-y-3 max-h-[520px] sm:max-h-[560px] overflow-y-auto pr-0.5">
-            {sorted.map((b) => {
+            {filtered.map((b) => {
               const nights = Math.ceil(
                 (new Date(b.checkOut).getTime() - new Date(b.checkIn).getTime()) / 86400000
               )
@@ -142,7 +300,7 @@ export function BookingList({ bookings, onRefresh }: BookingListProps) {
                     isExpanded ? 'border-blue-200 shadow-sm' : 'border-gray-100 hover:border-blue-100'
                   }`}
                 >
-                  {/* Card header — always visible */}
+                  {/* Card header */}
                   <div className="p-3 sm:p-4">
                     <div className="flex items-start justify-between gap-2">
                       <button
@@ -218,7 +376,6 @@ export function BookingList({ bookings, onRefresh }: BookingListProps) {
                   {/* Expanded detail */}
                   {isExpanded && (
                     <div className="border-t border-gray-100 px-3 sm:px-4 pb-4 pt-3 space-y-3">
-                      {/* Dates bar */}
                       <div className="flex items-center gap-1.5 text-xs bg-slate-50 rounded-lg px-2.5 py-2 text-gray-600 flex-wrap">
                         <svg className="w-3.5 h-3.5 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -230,7 +387,6 @@ export function BookingList({ bookings, onRefresh }: BookingListProps) {
                         <span className="text-gray-400">{b.guests} người</span>
                       </div>
 
-                      {/* Payment grid */}
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-xs">
                         <div className="bg-gray-50 rounded-lg px-2 py-2 text-center">
                           <p className="text-gray-400">Giá/đêm</p>
@@ -252,7 +408,6 @@ export function BookingList({ bookings, onRefresh }: BookingListProps) {
                         </div>
                       </div>
 
-                      {/* Meta */}
                       <div className="flex flex-wrap gap-3 text-xs text-gray-500">
                         <span>Ngày đặt: <strong>{fmtFull(b.bookingDate)}</strong></span>
                         <span>ID: <code className="bg-gray-100 px-1 rounded text-gray-600">{b.id.slice(0, 8)}…</code></span>
