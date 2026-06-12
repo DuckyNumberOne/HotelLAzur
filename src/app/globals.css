@@ -1,26 +1,126 @@
 @import "tailwindcss";
+@import "react-calendar/dist/Calendar.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ─── Calendar overrides ─────────────────────────────── */
+.hotel-calendar .react-calendar {
+  width: 100%;
+  border: none;
+  font-family: var(--font-geist, system-ui, sans-serif);
+  line-height: 1.4;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+.hotel-calendar .react-calendar__navigation {
+  margin-bottom: 4px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+.hotel-calendar .react-calendar__navigation button {
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 13px;
+  min-width: 32px;
+}
+
+.hotel-calendar .react-calendar__navigation button:hover,
+.hotel-calendar .react-calendar__navigation button:focus {
+  background-color: #eff6ff;
+}
+
+/* Tiles — tall enough for guest names */
+.hotel-calendar .react-calendar__tile {
+  border-radius: 6px;
+  padding: 4px 1px;
+  min-height: 52px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  transition: background 0.15s;
+  overflow: hidden;
+}
+
+.hotel-calendar .react-calendar__tile abbr {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.6;
+}
+
+/* Pending → amber */
+.hotel-calendar .tile-booked {
+  background-color: #fef3c7 !important;
+  color: #92400e !important;
+}
+.hotel-calendar .tile-booked:hover { background-color: #fde68a !important; }
+
+/* Paid → emerald */
+.hotel-calendar .tile-paid {
+  background-color: #d1fae5 !important;
+  color: #065f46 !important;
+}
+.hotel-calendar .tile-paid:hover { background-color: #a7f3d0 !important; }
+
+/* Today */
+.hotel-calendar .react-calendar__tile--now {
+  background-color: #dbeafe !important;
+  font-weight: bold;
+}
+.hotel-calendar .react-calendar__tile--now abbr { color: #1e40af; }
+
+/* Selected */
+.hotel-calendar .react-calendar__tile--active {
+  background-color: #3b82f6 !important;
+  color: white !important;
+}
+
+/* Guest name badge */
+.guest-label {
+  display: block;
+  margin-top: 1px;
+  font-size: 8px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  max-width: 96%;
+  color: #374151;
+  background: rgba(255, 255, 255, 0.75);
+  border-radius: 3px;
+  padding: 0 2px;
+  line-height: 1.5;
+}
+
+.guest-extra {
+  margin-left: 1px;
+  font-size: 7px;
+  color: #6b7280;
+}
+
+/* Weekday labels */
+.hotel-calendar .react-calendar__month-view__weekdays {
+  font-size: 10px;
+  font-weight: 700;
+  color: #6b7280;
+  text-transform: uppercase;
+}
+
+.hotel-calendar .react-calendar__month-view__weekdays abbr {
+  text-decoration: none;
+}
+
+/* ─── Mobile: tighter tiles ──────────────────────────── */
+@media (max-width: 400px) {
+  .hotel-calendar .react-calendar__tile {
+    padding: 3px 0;
+    min-height: 44px;
+    border-radius: 4px;
   }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  .hotel-calendar .react-calendar__tile abbr {
+    font-size: 11px;
+  }
+  .guest-label {
+    font-size: 7px;
+  }
+  .hotel-calendar .react-calendar__navigation button {
+    font-size: 12px;
+    padding: 4px;
+  }
 }
