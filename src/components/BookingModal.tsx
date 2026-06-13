@@ -36,6 +36,7 @@ export const BookingModal = NiceModal.create<BookingModalProps>(({ onSuccess, bo
         guests: booking.guests,
         pricePerNight: booking.pricePerNight,
         deposit: booking.deposit,
+        hoaHongBenThu3: booking.hoaHongBenThu3,
         status: booking.status,
         notes: booking.notes ?? '',
       }

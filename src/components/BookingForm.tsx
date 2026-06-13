@@ -39,8 +39,7 @@ function Field({
 }
 
 const inputCls = (err?: boolean) =>
-  `w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
-    err ? 'border-red-400 bg-red-50' : 'border-gray-200 bg-white'
+  `w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${err ? 'border-red-400 bg-red-50' : 'border-gray-200 bg-white'
   }`
 
 const readonlyCls =
@@ -63,16 +62,18 @@ export function BookingForm({ onSubmit, isSubmitting, onCancel, defaultValues, s
       guests: 1,
       pricePerNight: 0,
       deposit: 0,
+      hoaHongBenThu3: 5,
       status: 'pending',
       ...defaultValues,
     },
   })
 
-  const [checkIn, checkOut, pricePerNight, deposit] = watch([
+  const [checkIn, checkOut, pricePerNight, deposit, hoaHongBenThu3] = watch([
     'checkIn',
     'checkOut',
     'pricePerNight',
     'deposit',
+    'hoaHongBenThu3',
   ])
 
   const nights =
@@ -80,7 +81,10 @@ export function BookingForm({ onSubmit, isSubmitting, onCancel, defaultValues, s
       ? Math.max(0, Math.ceil((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / 86400000))
       : 0
   const totalPrice = (Number(pricePerNight) || 0) * nights
-  const remaining = totalPrice - (Number(deposit) || 0)
+  const commissionRate = Number(hoaHongBenThu3) || 0
+  const commissionAmount = Math.round(totalPrice * commissionRate / 100)
+  const netRevenue = totalPrice - commissionAmount
+  const remaining = netRevenue - (Number(deposit) || 0)
 
   return (
     <form id={formId} onSubmit={handleSubmit(onSubmit)} className="space-y-5">
@@ -191,48 +195,92 @@ export function BookingForm({ onSubmit, isSubmitting, onCancel, defaultValues, s
         <p className="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-3">
           Thanh toán
         </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Field label="Giá / đêm (VNĐ)" required error={errors.pricePerNight?.message}>
-            <input
-              {...register('pricePerNight')}
-              type="number"
-              placeholder="800000"
-              className={inputCls(!!errors.pricePerNight)}
-            />
-          </Field>
+        <div className="space-y-3">
 
-          <Field label="Tổng tiền (VNĐ)">
-            <div className={readonlyCls}>
-              {totalPrice > 0 ? totalPrice.toLocaleString('vi-VN') + 'đ' : '—'}
+          {/* Row 1: Giá đêm + Tổng tiền */}
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Giá / đêm (VNĐ)" required error={errors.pricePerNight?.message}>
+              <input
+                {...register('pricePerNight')}
+                type="number"
+                placeholder="800000"
+                className={inputCls(!!errors.pricePerNight)}
+              />
+            </Field>
+            <Field label="Tổng tiền">
+              <div className={readonlyCls}>
+                {totalPrice > 0 ? totalPrice.toLocaleString('vi-VN') + 'đ' : '—'}
+              </div>
+            </Field>
+          </div>
+
+          {/* Row 2: Hoa hồng — card nổi bật */}
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 space-y-2">
+            <p className="text-xs font-semibold text-amber-700 uppercase tracking-wider">
+              Hoa hồng bên thứ 3
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Tỉ lệ" error={errors.hoaHongBenThu3?.message}>
+                <div className="flex items-center gap-1.5">
+                  <input
+                    {...register('hoaHongBenThu3')}
+                    type="number"
+                    min={0}
+                    max={100}
+                    step={0.5}
+                    className={`${inputCls(!!errors.hoaHongBenThu3)} flex-1`}
+                  />
+                  <span className="text-sm font-semibold text-amber-600 shrink-0">%</span>
+                </div>
+              </Field>
+              <Field label="Tiền hoa hồng">
+                <div className="w-full px-3 py-2 border border-amber-200 rounded-lg text-sm bg-white text-amber-700 font-semibold">
+                  {commissionAmount > 0 ? '−' + commissionAmount.toLocaleString('vi-VN') + 'đ' : '—'}
+                </div>
+              </Field>
             </div>
-          </Field>
 
-          <Field label="Đã cọc (VNĐ)" required error={errors.deposit?.message}>
-            <input
-              {...register('deposit')}
-              type="number"
-              min={0}
-              step={50000}
-              placeholder="0"
-              className={inputCls(!!errors.deposit)}
-            />
-          </Field>
+            {/* Thực thu */}
+            {totalPrice > 0 && (
+              <div className="flex items-center justify-between px-3 py-2 bg-white rounded-lg border border-amber-200">
+                <span className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Thực thu</span>
+                <span className="text-base font-bold text-emerald-600">
+                  {netRevenue.toLocaleString('vi-VN')}đ
+                </span>
+              </div>
+            )}
+          </div>
 
-          <Field label="Còn lại (VNĐ)">
-            <div
-              className={`${readonlyCls} ${remaining < 0 ? 'text-red-600' : remaining === 0 ? 'text-green-600' : 'text-orange-600'}`}
-            >
-              {totalPrice > 0 ? remaining.toLocaleString('vi-VN') + 'đ' : '—'}
-            </div>
-          </Field>
+          {/* Row 3: Cọc + Còn lại */}
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Đã cọc (VNĐ)" required error={errors.deposit?.message}>
+              <input
+                {...register('deposit')}
+                type="number"
+                min={0}
+                step={50000}
+                placeholder="0"
+                className={inputCls(!!errors.deposit)}
+              />
+            </Field>
+            <Field label="Còn lại (VNĐ)">
+              <div className={`${readonlyCls} ${
+                remaining < 0 ? 'text-red-600' : remaining === 0 ? 'text-green-600' : 'text-orange-600'
+              }`}>
+                {totalPrice > 0 ? remaining.toLocaleString('vi-VN') + 'đ' : '—'}
+              </div>
+            </Field>
+          </div>
 
-          <Field label="Tình trạng" required error={errors.status?.message} className="sm:col-span-2">
+          {/* Row 4: Tình trạng */}
+          <Field label="Tình trạng" required error={errors.status?.message}>
             <select {...register('status')} className={inputCls(!!errors.status)}>
               <option value="pending">Đang đặt</option>
               <option value="paid">Đã thanh toán</option>
               <option value="cancelled">Hủy phòng</option>
             </select>
           </Field>
+
         </div>
       </div>
 

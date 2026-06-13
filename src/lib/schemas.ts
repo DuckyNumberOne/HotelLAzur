@@ -18,6 +18,7 @@ export const bookingSchema = z
     guests: z.coerce.number().int().min(1, 'Ít nhất 1 người').max(50, 'Tối đa 50 người'),
     pricePerNight: z.coerce.number(),
     deposit: z.coerce.number().min(0, 'Tiền cọc không hợp lệ'),
+    hoaHongBenThu3: z.coerce.number().min(0, 'Tối thiểu 0%').max(100, 'Tối đa 100%').default(5),
     status: z.enum(['pending', 'paid', 'cancelled'] as const),
     notes: z.string().max(500).optional(),
   })
