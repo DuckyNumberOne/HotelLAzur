@@ -166,8 +166,8 @@ export default function HomePage() {
 
             {/* ── Tab content ── */}
             {activeTab === 'overview' && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-                <BookingCalendar bookings={bookings} />
+              <div className="space-y-4 sm:space-y-6">
+                <BookingCalendar bookings={bookings} onRefresh={fetchBookings} />
                 <BookingList bookings={bookings} onRefresh={fetchBookings} />
               </div>
             )}
