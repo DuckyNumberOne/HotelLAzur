@@ -19,6 +19,7 @@ export interface Booking {
   totalPrice: number
   deposit: number
   remaining: number
+  hoaHongBenThu3: number
   status: BookingStatus
   notes?: string
   createdAt: string

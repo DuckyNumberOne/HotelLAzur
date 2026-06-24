@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getBookings, addBooking } from '@/lib/store'
+import { getBookings, createBooking } from '@/lib/sheetsApi'
 import { bookingSchema } from '@/lib/schemas'
 
 export async function GET() {
-  return NextResponse.json(getBookings())
+  try {
+    const bookings = await getBookings()
+    return NextResponse.json(bookings)
+  } catch {
+    return NextResponse.json({ error: 'Lỗi khi lấy dữ liệu' }, { status: 500 })
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -16,7 +21,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
-    const booking = addBooking(result.data)
+    const booking = await createBooking(result.data)
     return NextResponse.json(booking, { status: 201 })
   } catch {
     return NextResponse.json({ error: 'Lỗi server' }, { status: 500 })

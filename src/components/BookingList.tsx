@@ -15,11 +15,15 @@ interface BookingListProps {
 }
 
 function fmt(d: string) {
-  return format(new Date(d + 'T00:00:00'), 'dd/MM/yy', { locale: vi })
+  if (!d) return '—'
+  const date = new Date(d + 'T00:00:00')
+  return isNaN(date.getTime()) ? '—' : format(date, 'dd/MM/yy', { locale: vi })
 }
 
 function fmtFull(d: string) {
-  return format(new Date(d + 'T00:00:00'), 'dd/MM/yyyy', { locale: vi })
+  if (!d) return '—'
+  const date = new Date(d + 'T00:00:00')
+  return isNaN(date.getTime()) ? '—' : format(date, 'dd/MM/yyyy', { locale: vi })
 }
 
 function fmtMoney(n: number) {

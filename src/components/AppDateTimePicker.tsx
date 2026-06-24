@@ -19,6 +19,8 @@ export interface AppDateTimePickerProps {
 }
 
 function strToDate(str: string, mode: 'date' | 'month'): Date {
+  // If already an ISO timestamp, parse directly without appending suffix
+  if (str.includes('T')) return new Date(str)
   return mode === 'month'
     ? new Date(str + '-01T00:00:00')
     : new Date(str + 'T00:00:00')

@@ -12,11 +12,12 @@ export function addBooking(data: Omit<Booking, 'id' | 'totalPrice' | 'remaining'
     Math.ceil((new Date(data.checkOut).getTime() - new Date(data.checkIn).getTime()) / 86400000)
   )
   const totalPrice = data.pricePerNight * nights
+  const commission = Math.round(totalPrice * ((data.hoaHongBenThu3 ?? 0) / 100))
   const booking: Booking = {
     ...data,
     id: crypto.randomUUID(),
     totalPrice,
-    remaining: totalPrice - data.deposit,
+    remaining: totalPrice - commission - data.deposit,
     createdAt: new Date().toISOString(),
   }
   bookings.push(booking)
@@ -34,11 +35,12 @@ export function updateBooking(
     Math.ceil((new Date(data.checkOut).getTime() - new Date(data.checkIn).getTime()) / 86400000)
   )
   const totalPrice = data.pricePerNight * nights
+  const commission = Math.round(totalPrice * ((data.hoaHongBenThu3 ?? 0) / 100))
   const updated: Booking = {
     ...bookings[idx],
     ...data,
     totalPrice,
-    remaining: totalPrice - data.deposit,
+    remaining: totalPrice - commission - data.deposit,
   }
   bookings[idx] = updated
   return updated
