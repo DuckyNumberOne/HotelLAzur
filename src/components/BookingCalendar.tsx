@@ -181,17 +181,17 @@ export function BookingCalendar({ bookings }: BookingCalendarProps) {
       {/* Legend */}
       <div className="mt-3 flex flex-wrap gap-3 text-xs text-gray-500">
         <div className="flex items-center gap-1.5">
-          <span className="w-3 h-3 rounded-sm bg-amber-300 shrink-0" />
+          <span className="w-3 h-3 rounded-sm shrink-0" style={{ background: '#fde9b6' }} />
           <span>Đang đặt</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="w-3 h-3 rounded-sm bg-emerald-400 shrink-0" />
+          <span className="w-3 h-3 rounded-sm shrink-0" style={{ background: '#bbf0d4' }} />
           <span>Đã thanh toán</span>
         </div>
         <div className="flex items-center gap-1.5">
           <span
             className="w-3 h-3 rounded-sm shrink-0"
-            style={{ background: 'linear-gradient(135deg, #fef3c7 0 44%, #fff 44% 56%, #d1fae5 56%)' }}
+            style={{ background: 'linear-gradient(90deg, #fde9b6 0 40%, #fff 40% 60%, #bbf0d4 60%)' }}
           />
           <span>Trả/Nhận trong ngày (dọn {CHECK_OUT_TIME}–{CHECK_IN_TIME})</span>
         </div>

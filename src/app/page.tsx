@@ -19,9 +19,11 @@ export default function HomePage() {
   const fetchBookings = useCallback(async () => {
     try {
       const res = await fetch('/api/bookings')
-      setBookings(await res.json())
+      const data = await res.json()
+      // API trả về mảng khi thành công, hoặc { error } khi lỗi → luôn giữ bookings là mảng
+      setBookings(Array.isArray(data) ? data : [])
     } catch {
-      /* silent */
+      setBookings([])
     } finally {
       setIsLoading(false)
     }

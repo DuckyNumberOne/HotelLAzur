@@ -45,49 +45,49 @@
 }
 
 /* ── Occupancy: 1 ô = 24h, tách theo giờ nhận (14h) / trả (12h) ──
-   Buổi sáng = góc trên-trái, buổi chiều/tối = góc dưới-phải.
-   Dải trong suốt ở giữa (46%–54%) = khoảng 12h–14h dọn phòng. */
+   Trả phòng (sáng) = nửa TRÁI, nhận phòng (chiều) = nửa PHẢI → tạo dải ngang
+   liền mạch suốt kỳ ở. Khoảng trống ở giữa (44%–56%) = 12h–14h dọn phòng. */
 
 /* Ở trọn ngày (giữa kỳ) → tô đầy */
 .hotel-calendar .tile-solid-pending {
-  background-color: #fef3c7 !important;
+  background-color: #fde9b6 !important;
   color: #92400e !important;
 }
-.hotel-calendar .tile-solid-pending:hover { background-color: #fde68a !important; }
+.hotel-calendar .tile-solid-pending:hover { background-color: #fcdd97 !important; }
 .hotel-calendar .tile-solid-paid {
-  background-color: #d1fae5 !important;
+  background-color: #bbf0d4 !important;
   color: #065f46 !important;
 }
 .hotel-calendar .tile-solid-paid:hover { background-color: #a7f3d0 !important; }
 
-/* Chỉ trả phòng (sáng, trước 12h) → nửa trên-trái */
+/* Chỉ trả phòng (sáng, trước 12h) → nửa trái */
 .hotel-calendar .tile-am-pending {
-  background: linear-gradient(135deg, #fef3c7 0 46%, transparent 46%) !important;
+  background: linear-gradient(90deg, #fde9b6 0 44%, transparent 44%) !important;
 }
 .hotel-calendar .tile-am-paid {
-  background: linear-gradient(135deg, #d1fae5 0 46%, transparent 46%) !important;
+  background: linear-gradient(90deg, #bbf0d4 0 44%, transparent 44%) !important;
 }
 
-/* Chỉ nhận phòng (chiều, sau 14h) → nửa dưới-phải */
+/* Chỉ nhận phòng (chiều, sau 14h) → nửa phải */
 .hotel-calendar .tile-pm-pending {
-  background: linear-gradient(135deg, transparent 0 54%, #fef3c7 54%) !important;
+  background: linear-gradient(90deg, transparent 0 56%, #fde9b6 56%) !important;
 }
 .hotel-calendar .tile-pm-paid {
-  background: linear-gradient(135deg, transparent 0 54%, #d1fae5 54%) !important;
+  background: linear-gradient(90deg, transparent 0 56%, #bbf0d4 56%) !important;
 }
 
 /* Trả phòng sáng + nhận phòng chiều (cùng ngày) → chia đôi, chừa khoảng dọn phòng */
 .hotel-calendar .tile-turn-pending-pending {
-  background: linear-gradient(135deg, #fef3c7 0 46%, transparent 46% 54%, #fef3c7 54%) !important;
+  background: linear-gradient(90deg, #fde9b6 0 44%, transparent 44% 56%, #fde9b6 56%) !important;
 }
 .hotel-calendar .tile-turn-pending-paid {
-  background: linear-gradient(135deg, #fef3c7 0 46%, transparent 46% 54%, #d1fae5 54%) !important;
+  background: linear-gradient(90deg, #fde9b6 0 44%, transparent 44% 56%, #bbf0d4 56%) !important;
 }
 .hotel-calendar .tile-turn-paid-pending {
-  background: linear-gradient(135deg, #d1fae5 0 46%, transparent 46% 54%, #fef3c7 54%) !important;
+  background: linear-gradient(90deg, #bbf0d4 0 44%, transparent 44% 56%, #fde9b6 56%) !important;
 }
 .hotel-calendar .tile-turn-paid-paid {
-  background: linear-gradient(135deg, #d1fae5 0 46%, transparent 46% 54%, #d1fae5 54%) !important;
+  background: linear-gradient(90deg, #bbf0d4 0 44%, transparent 44% 56%, #bbf0d4 56%) !important;
 }
 
 /* Today */
