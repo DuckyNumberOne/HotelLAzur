@@ -44,19 +44,51 @@
   line-height: 1.6;
 }
 
-/* Pending → amber */
-.hotel-calendar .tile-booked {
+/* ── Occupancy: 1 ô = 24h, tách theo giờ nhận (14h) / trả (12h) ──
+   Buổi sáng = góc trên-trái, buổi chiều/tối = góc dưới-phải.
+   Dải trong suốt ở giữa (46%–54%) = khoảng 12h–14h dọn phòng. */
+
+/* Ở trọn ngày (giữa kỳ) → tô đầy */
+.hotel-calendar .tile-solid-pending {
   background-color: #fef3c7 !important;
   color: #92400e !important;
 }
-.hotel-calendar .tile-booked:hover { background-color: #fde68a !important; }
-
-/* Paid → emerald */
-.hotel-calendar .tile-paid {
+.hotel-calendar .tile-solid-pending:hover { background-color: #fde68a !important; }
+.hotel-calendar .tile-solid-paid {
   background-color: #d1fae5 !important;
   color: #065f46 !important;
 }
-.hotel-calendar .tile-paid:hover { background-color: #a7f3d0 !important; }
+.hotel-calendar .tile-solid-paid:hover { background-color: #a7f3d0 !important; }
+
+/* Chỉ trả phòng (sáng, trước 12h) → nửa trên-trái */
+.hotel-calendar .tile-am-pending {
+  background: linear-gradient(135deg, #fef3c7 0 46%, transparent 46%) !important;
+}
+.hotel-calendar .tile-am-paid {
+  background: linear-gradient(135deg, #d1fae5 0 46%, transparent 46%) !important;
+}
+
+/* Chỉ nhận phòng (chiều, sau 14h) → nửa dưới-phải */
+.hotel-calendar .tile-pm-pending {
+  background: linear-gradient(135deg, transparent 0 54%, #fef3c7 54%) !important;
+}
+.hotel-calendar .tile-pm-paid {
+  background: linear-gradient(135deg, transparent 0 54%, #d1fae5 54%) !important;
+}
+
+/* Trả phòng sáng + nhận phòng chiều (cùng ngày) → chia đôi, chừa khoảng dọn phòng */
+.hotel-calendar .tile-turn-pending-pending {
+  background: linear-gradient(135deg, #fef3c7 0 46%, transparent 46% 54%, #fef3c7 54%) !important;
+}
+.hotel-calendar .tile-turn-pending-paid {
+  background: linear-gradient(135deg, #fef3c7 0 46%, transparent 46% 54%, #d1fae5 54%) !important;
+}
+.hotel-calendar .tile-turn-paid-pending {
+  background: linear-gradient(135deg, #d1fae5 0 46%, transparent 46% 54%, #fef3c7 54%) !important;
+}
+.hotel-calendar .tile-turn-paid-paid {
+  background: linear-gradient(135deg, #d1fae5 0 46%, transparent 46% 54%, #d1fae5 54%) !important;
+}
 
 /* Today */
 .hotel-calendar .react-calendar__tile--now {
@@ -69,15 +101,6 @@
 .hotel-calendar .react-calendar__tile--active {
   background-color: #3b82f6 !important;
   color: white !important;
-}
-
-/* Multi-status tile (paid + pending mixed on same day) */
-.hotel-calendar .tile-multi {
-  background: linear-gradient(135deg, #fef3c7 50%, #d1fae5 50%) !important;
-  color: #374151 !important;
-}
-.hotel-calendar .tile-multi:hover {
-  background: linear-gradient(135deg, #fde68a 50%, #a7f3d0 50%) !important;
 }
 
 /* Single guest badge */

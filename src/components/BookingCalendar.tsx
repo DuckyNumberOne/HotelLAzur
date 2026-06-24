@@ -4,10 +4,23 @@ import { useMemo } from 'react'
 import Calendar from 'react-calendar'
 import 'react-calendar/dist/Calendar.css'
 import type { Booking } from '@/types/booking'
-import { STATUS_LABELS } from '@/types/booking'
+import { STATUS_LABELS, CHECK_IN_TIME, CHECK_OUT_TIME } from '@/types/booking'
 
 interface BookingCalendarProps {
   bookings: Booking[]
+}
+
+/**
+ * Occupancy của một ô lịch (1 ngày = 24h), tách theo giờ nhận/trả phòng:
+ * - am: khách có mặt buổi sáng (trước 12h) → khách trả phòng ngày đó hoặc đang ở giữa kỳ.
+ * - pm: khách có mặt buổi chiều/tối (sau 14h) → khách nhận phòng ngày đó hoặc đang ở giữa kỳ.
+ * - all: mọi khách chạm tới ngày đó (để hiển thị tên).
+ * Khoảng 12h–14h trống = thời gian dọn phòng.
+ */
+interface DayOccupancy {
+  am: Booking[]
+  pm: Booking[]
+  all: Booking[]
 }
 
 function toLocalStr(date: Date): string {
@@ -25,16 +38,55 @@ function getDatesInRange(start: string, end: string): string[] {
   return dates
 }
 
+/** Màu đại diện cho một nửa ô: ưu tiên 'pending' (cần chú ý) nếu có. */
+function halfStatus(list: Booking[]): 'paid' | 'pending' | null {
+  if (list.length === 0) return null
+  return list.some((b) => b.status === 'pending') ? 'pending' : 'paid'
+}
+
+/** Tính class nền cho ô lịch từ occupancy buổi sáng / chiều. */
+function tileClassFor(occ: DayOccupancy | undefined): string | null {
+  if (!occ || occ.all.length === 0) return null
+  // Khách ở trọn ngày (giữa kỳ) → tô đầy ô, không có khoảng dọn phòng.
+  const hasFullDay = occ.am.some((b) => occ.pm.includes(b))
+  if (hasFullDay) return `tile-solid-${halfStatus(occ.all)}`
+
+  const am = halfStatus(occ.am)
+  const pm = halfStatus(occ.pm)
+  if (am && pm) return `tile-turn-${am}-${pm}` // trả phòng sáng + nhận phòng chiều
+  if (pm) return `tile-pm-${pm}` // chỉ nhận phòng (chiều)
+  if (am) return `tile-am-${am}` // chỉ trả phòng (sáng)
+  return null
+}
+
 export function BookingCalendar({ bookings }: BookingCalendarProps) {
   const today = new Date().toISOString().split('T')[0]
 
   const dateMap = useMemo(() => {
-    const map = new Map<string, Booking[]>()
+    const map = new Map<string, DayOccupancy>()
+    const ensure = (d: string): DayOccupancy => {
+      let entry = map.get(d)
+      if (!entry) {
+        entry = { am: [], pm: [], all: [] }
+        map.set(d, entry)
+      }
+      return entry
+    }
     bookings.forEach((b) => {
       if (b.status === 'cancelled') return
       getDatesInRange(b.checkIn, b.checkOut).forEach((d) => {
-        if (!map.has(d)) map.set(d, [])
-        map.get(d)!.push(b)
+        const entry = ensure(d)
+        entry.all.push(b)
+        const isArrival = d === b.checkIn
+        const isDeparture = d === b.checkOut
+        if (isDeparture && !isArrival) {
+          entry.am.push(b) // trả phòng lúc 12h → chỉ buổi sáng
+        } else if (isArrival && !isDeparture) {
+          entry.pm.push(b) // nhận phòng lúc 14h → chỉ buổi chiều/tối
+        } else {
+          entry.am.push(b) // ở trọn ngày
+          entry.pm.push(b)
+        }
       })
     })
     return map
@@ -65,7 +117,9 @@ export function BookingCalendar({ bookings }: BookingCalendarProps) {
       <div className="flex items-center justify-between mb-4">
         <div>
           <h2 className="text-lg sm:text-xl font-bold text-gray-800">Lịch Đặt Phòng</h2>
-          <p className="text-xs text-gray-400 mt-0.5">Tên khách hiển thị theo ngày</p>
+          <p className="text-xs text-gray-400 mt-0.5">
+            Nhận phòng {CHECK_IN_TIME} · Trả phòng {CHECK_OUT_TIME}
+          </p>
         </div>
         <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full">
           {activeCount} phòng
@@ -79,17 +133,13 @@ export function BookingCalendar({ bookings }: BookingCalendarProps) {
             locale="vi-VN"
             tileClassName={({ date, view }) => {
               if (view !== 'month') return null
-              const list = dateMap.get(toLocalStr(date))
-              if (!list) return null
-              const hasPaid = list.some((b) => b.status === 'paid')
-              const hasPending = list.some((b) => b.status === 'pending')
-              if (hasPaid && hasPending) return 'tile-multi'
-              return hasPaid ? 'tile-paid' : 'tile-booked'
+              return tileClassFor(dateMap.get(toLocalStr(date)))
             }}
             tileContent={({ date, view }) => {
               if (view !== 'month') return null
-              const list = dateMap.get(toLocalStr(date))
-              if (!list) return null
+              const occ = dateMap.get(toLocalStr(date))
+              if (!occ) return null
+              const list = occ.all
 
               const tooltip = list
                 .map((b) => `${b.guestName} — ${STATUS_LABELS[b.status].label}`)
@@ -141,9 +191,9 @@ export function BookingCalendar({ bookings }: BookingCalendarProps) {
         <div className="flex items-center gap-1.5">
           <span
             className="w-3 h-3 rounded-sm shrink-0"
-            style={{ background: 'linear-gradient(135deg, #fef3c7 50%, #d1fae5 50%)' }}
+            style={{ background: 'linear-gradient(135deg, #fef3c7 0 44%, #fff 44% 56%, #d1fae5 56%)' }}
           />
-          <span>Nhiều khách</span>
+          <span>Trả/Nhận trong ngày (dọn {CHECK_OUT_TIME}–{CHECK_IN_TIME})</span>
         </div>
         <div className="flex items-center gap-1.5">
           <span className="w-3 h-3 rounded-sm bg-blue-200 border border-blue-400 shrink-0" />
