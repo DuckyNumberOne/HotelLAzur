@@ -103,28 +103,12 @@ export function BookingForm({ onSubmit, isSubmitting, onCancel, defaultValues, s
             />
           </Field>
 
-          <Field label="Số điện thoại" required error={errors.phone?.message}>
+          <Field label="Số điện thoại" required error={errors.phone?.message} className="sm:col-span-2">
             <input
               {...register('phone')}
               type="tel"
               placeholder="0901234567"
               className={inputCls(!!errors.phone)}
-            />
-          </Field>
-
-          <Field label="Ngày đặt" required error={errors.bookingDate?.message}>
-            <Controller
-              name="bookingDate"
-              control={control}
-              render={({ field }) => (
-                <AppDateTimePicker
-                  value={field.value ?? ''}
-                  onChange={field.onChange}
-                  min={today}
-                  placeholder="Chọn ngày đặt"
-                  error={!!errors.bookingDate}
-                />
-              )}
             />
           </Field>
         </div>

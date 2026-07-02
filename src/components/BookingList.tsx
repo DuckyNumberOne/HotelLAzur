@@ -89,6 +89,7 @@ export function BookingList({ bookings, onRefresh }: BookingListProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [deletingBooking, setDeletingBooking] = useState<Booking | null>(null)
+  const [payingId, setPayingId] = useState<string | null>(null)
 
   const [searchName, setSearchName] = useState('')
   const [filterStatus, setFilterStatus] = useState<StatusFilter>('all')
@@ -126,6 +127,32 @@ export function BookingList({ bookings, onRefresh }: BookingListProps) {
 
   const handleEdit = (b: Booking) => {
     NiceModal.show(BookingModal, { booking: b, onSuccess: onRefresh })
+  }
+
+  const handleMarkPaid = async (b: Booking) => {
+    setPayingId(b.id)
+    try {
+      await fetch(`/api/bookings/${b.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          guestName: b.guestName,
+          phone: b.phone,
+          bookingDate: b.bookingDate,
+          checkIn: b.checkIn,
+          checkOut: b.checkOut,
+          guests: b.guests,
+          pricePerNight: b.pricePerNight,
+          deposit: b.deposit,
+          hoaHongBenThu3: b.hoaHongBenThu3,
+          status: 'paid',
+          notes: b.notes ?? '',
+        }),
+      })
+      onRefresh?.()
+    } finally {
+      setPayingId(null)
+    }
   }
 
   const handleDeleteConfirm = async () => {
@@ -296,6 +323,7 @@ export function BookingList({ bookings, onRefresh }: BookingListProps) {
               const status = STATUS_LABELS[b.status]
               const isExpanded = expandedId === b.id
               const isDeleting = deletingId === b.id
+              const isPaying = payingId === b.id
 
               return (
                 <div
@@ -364,15 +392,37 @@ export function BookingList({ bookings, onRefresh }: BookingListProps) {
                     </div>
 
                     {/* Quick money summary */}
-                    <div className="mt-2 flex items-center gap-3 text-xs">
-                      <span className="font-bold text-blue-700">{fmtMoney(b.totalPrice)}đ</span>
-                      <span className="text-gray-300">|</span>
-                      <span className="text-gray-500">Cọc: {fmtMoney(b.deposit)}đ</span>
-                      {b.remaining > 0 && b.status !== 'cancelled' && (
-                        <>
-                          <span className="text-gray-300">|</span>
-                          <span className="text-orange-600 font-medium">Còn: {fmtMoney(b.remaining)}đ</span>
-                        </>
+                    <div className="mt-2 flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-3 text-xs min-w-0 flex-wrap">
+                        <span className="font-bold text-blue-700">{fmtMoney(b.totalPrice)}đ</span>
+                        <span className="text-gray-300">|</span>
+                        <span className="text-gray-500">Cọc: {fmtMoney(b.deposit)}đ</span>
+                        {b.remaining > 0 && b.status !== 'cancelled' && (
+                          <>
+                            <span className="text-gray-300">|</span>
+                            <span className="text-orange-600 font-medium">Còn: {fmtMoney(b.remaining)}đ</span>
+                          </>
+                        )}
+                      </div>
+                      {b.status === 'pending' && (
+                        <button
+                          onClick={() => handleMarkPaid(b)}
+                          disabled={isPaying}
+                          className="shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-lg bg-green-600 text-white text-xs font-semibold hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          title="Đánh dấu đã thanh toán"
+                        >
+                          {isPaying ? (
+                            <svg className="animate-spin w-3.5 h-3.5" viewBox="0 0 24 24" fill="none">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                            </svg>
+                          ) : (
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          )}
+                          Thanh toán
+                        </button>
                       )}
                     </div>
                   </div>
